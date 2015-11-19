@@ -14,8 +14,8 @@
 #define pi ((double)(4.0*atan(1.0)))
 
 void startup (void);
-int solicit (void);
-void collect (double sum);
+int solicita (void);
+void coleta (double, double, double);
 
 int main(int argc, char** argv){
 	/* Este programa bem simples aproxima pi calculando pi = integral 
@@ -27,9 +27,11 @@ int main(int argc, char** argv){
 	*/
 	double sum, w, total = 0;
 	int i, N;
-	int rank, p, dest = 0, tag = 50;
+	int rank, np, dest = 0, tag = 50, iniciado, finalizado;
+	double tempo_inicial, tempo_final;
 	MPI_Status status;
-	MPI_Init(&argc, &argv);
+	MPI_Initialized(&iniciado);
+	if(!iniciado) MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &np);
 	/* 
@@ -40,28 +42,34 @@ int main(int argc, char** argv){
 	MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	while (N > 0) {
+		//MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		tempo_inicial = MPI_Wtime();
 		w = 1.0/(double)N;
 		sum = 0.0;
+		total = 0.0;
 		for (i = rank; i <= N; i += np) sum = sum + f(((double)i-0.5)*w);
 		sum = sum * w;
 		/*
 		* A rotina coleta irá coletar e imprimir resultados 
 		*/
 
-//ISSO ESTA ERRADO!!!! verificar
 		if(rank == 0){
-			for(int s = 0; s < np; s++){
-				MPI_Recv(&sum, 1, MPI_DOUBLE, s, tag, MPI_COMM_WORLD, &status);
-			}
 			total += sum;
-			coleta(total);
+			for(int s = 1; s < np; s++){
+				MPI_Recv(&sum, 1, MPI_DOUBLE, s, tag, MPI_COMM_WORLD, &status);
+				total += sum;
+			}
+			tempo_final = MPI_Wtime();
+			coleta(total, tempo_inicial, tempo_final);
 			N = solicita ();
+			MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		}
 		else{
 			MPI_Send(&sum, 1, MPI_DOUBLE, dest, tag, MPI_COMM_WORLD);
 		}
 	}
-	MPI_Finalize();
+	MPI_Finalized(&finalizado);
+	if(!finalizado) MPI_Finalize();
 	return (0);
 }
 
@@ -76,10 +84,11 @@ int solicita (void)
 }
 
 /*  --------------------------------------------------------------  */
-void coleta(double sum)
+void coleta(double total, double tempo_inicial, double tempo_final)
 {
-  double err;
-  err = sum - pi;
-  printf("soma, erro = %7.5f, %10e\n", sum, err);
+	double err;
+	err = total - pi;
+	printf("soma, erro = %7.5f, %10e\n", total, err);
+	printf("tempo decorrido: %f segundos\n", tempo_final - tempo_inicial);
 }
 
