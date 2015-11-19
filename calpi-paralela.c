@@ -41,14 +41,13 @@ int main(int argc, char** argv){
 	if(rank == 0) N = solicita();
 	MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	while (N > 0) {
-		//MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	//while (N > 0) {
 		tempo_inicial = MPI_Wtime();
 		w = 1.0/(double)N;
 		sum = 0.0;
 		total = 0.0;
 		for (i = rank; i <= N; i += np) sum = sum + f(((double)i-0.5)*w);
-		sum = sum * w;
+		//sum = sum * w;
 		/*
 		* A rotina coleta irá coletar e imprimir resultados 
 		*/
@@ -59,15 +58,16 @@ int main(int argc, char** argv){
 				MPI_Recv(&sum, 1, MPI_DOUBLE, s, tag, MPI_COMM_WORLD, &status);
 				total += sum;
 			}
+			total = total * w;
 			tempo_final = MPI_Wtime();
 			coleta(total, tempo_inicial, tempo_final);
-			N = solicita ();
-			MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			//N = solicita ();
+			//MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		}
 		else{
 			MPI_Send(&sum, 1, MPI_DOUBLE, dest, tag, MPI_COMM_WORLD);
 		}
-	}
+	//}
 	MPI_Finalized(&finalizado);
 	if(!finalizado) MPI_Finalize();
 	return (0);
