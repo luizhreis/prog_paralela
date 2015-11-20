@@ -38,8 +38,6 @@ int main( int argc, char** argv ){
 	}
 	tempo_inicial = MPI_Wtime();
 	MPI_Bcast( v1, tam, MPI_LONG, 0, com);
-	//print_vetor( v1, tam );
-	MPI_Barrier( com );
 	printf("{%2d} [*] INFO: ordenando elementos...\n", rank );
 	for ( int i = rank; i < tam; i += np ){
 		temp = get_qtd_menor( v1, tam, i );
