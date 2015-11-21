@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpi.h"
 
 void gera_vetor( long *, long );
 void print_vetor( long *, long );
 long get_qtd_menor( long *, long, long );
 
-int main( long argc, char** argv ){
+int main( int argc, char** argv ){
 	long *v1, *v2, tam, temp;
-	printf("Informe o tamanho do vetor: ");
+	double tempo_inicial, tempo_final;
+	printf("Informe o tamanho do vetor: \n");
 	scanf("%ld", &tam);
 	v1 = ( long * ) malloc( sizeof( long ) * tam );
 	v2 = ( long * ) malloc( sizeof( long ) * tam );
@@ -20,12 +22,15 @@ int main( long argc, char** argv ){
 	printf("[*] INFO: exibindo vetor criado...\n" );
 	print_vetor( v1, tam );
 	printf("[*] INFO: ordenando elementos...\n" );
+	tempo_inicial = MPI_Wtime();
 	for ( int i = 0; i < tam; ++i ){
 		temp = get_qtd_menor( v1, tam, i );
 		v2[temp] = v1[i];
 	}
+	tempo_final = MPI_Wtime();
 	printf("[*] INFO: exibindo vetor ordenado...\n" );
 	print_vetor( v2, tam );
+	printf("tempo decorrido: %f segundos\n", tempo_final - tempo_inicial);
 	free( v1 );
 	free( v2 );
 	return 0;
